@@ -147,9 +147,10 @@ function goBack() {
 function getBasePathForComponents() {
   const path = window.location.pathname;
 
-  // Kalau project di GitHub Pages: /username/karteji-web/...
-  // ini tetap aman karena kita cek subfolder '/member/' atau '/dashboard/'
+  // Kalau URL mengandung /member/ → file HTML di folder member/
   if (path.includes('/member/')) return '..';
+
+  // Kalau URL mengandung /dashboard/ → file HTML di folder dashboard/
   if (path.includes('/dashboard/')) return '..';
 
   // Halaman publik di root folder project
