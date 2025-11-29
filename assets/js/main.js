@@ -4,8 +4,17 @@
 async function loadComponent(elementId, componentPath) {
   try {
     const response = await fetch(componentPath);
+
+    if (!response.ok) {
+      console.error('Error loading component:', componentPath, response.status);
+      return;
+    }
+
     const html = await response.text();
-    document.getElementById(elementId).innerHTML = html;
+    const el = document.getElementById(elementId);
+    if (!el) return;
+
+    el.innerHTML = html;
 
     // Initialize component-specific functions
     if (componentPath.includes('navbar')) {
@@ -22,32 +31,38 @@ function initNavbar() {
   const mobileMenuBtn = document.getElementById('mobile-menu-btn');
   const mobileMenu = document.getElementById('mobile-menu');
 
-  if (mobileMenuBtn) {
+  if (mobileMenuBtn && mobileMenu) {
     mobileMenuBtn.addEventListener('click', () => {
       mobileMenu.classList.toggle('hidden');
     });
   }
 
   // Update user status
-  auth.onAuthStateChanged(async (user) => {
-    const authButtons = document.getElementById('auth-buttons');
-    const userMenu = document.getElementById('user-menu');
+  if (typeof auth !== 'undefined') {
+    auth.onAuthStateChanged(async (user) => {
+      const authButtons = document.getElementById('auth-buttons');
+      const userMenu = document.getElementById('user-menu');
 
-    if (user) {
-      const userDoc = await db.collection('users').doc(user.uid).get();
-      const userData = userDoc.data();
+      if (user) {
+        try {
+          const userDoc = await db.collection('users').doc(user.uid).get();
+          const userData = userDoc.data() || {};
 
-      if (authButtons) authButtons.classList.add('hidden');
-      if (userMenu) {
-        userMenu.classList.remove('hidden');
-        const userName = document.getElementById('user-name');
-        if (userName) userName.textContent = userData.name;
+          if (authButtons) authButtons.classList.add('hidden');
+          if (userMenu) {
+            userMenu.classList.remove('hidden');
+            const userName = document.getElementById('user-name');
+            if (userName) userName.textContent = userData.name || user.email;
+          }
+        } catch (err) {
+          console.error('Error fetching user data:', err);
+        }
+      } else {
+        if (authButtons) authButtons.classList.remove('hidden');
+        if (userMenu) userMenu.classList.add('hidden');
       }
-    } else {
-      if (authButtons) authButtons.classList.remove('hidden');
-      if (userMenu) userMenu.classList.add('hidden');
-    }
-  });
+    });
+  }
 }
 
 // Show Toast Notification
@@ -113,12 +128,14 @@ async function deleteImage(imageUrl) {
 
 // Show Modal
 function showModal(modalId) {
-  document.getElementById(modalId).classList.remove('hidden');
+  const el = document.getElementById(modalId);
+  if (el) el.classList.remove('hidden');
 }
 
 // Hide Modal
 function hideModal(modalId) {
-  document.getElementById(modalId).classList.add('hidden');
+  const el = document.getElementById(modalId);
+  if (el) el.classList.add('hidden');
 }
 
 // Go Back
@@ -126,18 +143,33 @@ function goBack() {
   window.history.back();
 }
 
+// Helper: tentukan base path komponen (root / member / dashboard)
+function getBasePathForComponents() {
+  const path = window.location.pathname;
+
+  // Kalau project di GitHub Pages: /username/karteji-web/...
+  // ini tetap aman karena kita cek subfolder '/member/' atau '/dashboard/'
+  if (path.includes('/member/')) return '..';
+  if (path.includes('/dashboard/')) return '..';
+
+  // Halaman publik di root folder project
+  return '.';
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
+  const base = getBasePathForComponents();
+
   // Load navbar if exists
   const navbarElement = document.getElementById('navbar');
   if (navbarElement) {
-    loadComponent('navbar', '/components/navbar.html');
+    loadComponent('navbar', `${base}/components/navbar.html`);
   }
 
   // Load footer if exists
   const footerElement = document.getElementById('footer');
   if (footerElement) {
-    loadComponent('footer', '/components/footer.html');
+    loadComponent('footer', `${base}/components/footer.html`);
   }
 
   // Load sidebar if exists
@@ -145,12 +177,14 @@ document.addEventListener('DOMContentLoaded', () => {
   if (sidebarElement) {
     const path = window.location.pathname;
     if (path.includes('/dashboard/')) {
-      loadComponent('sidebar', '/components/sidebar-admin.html');
+      loadComponent('sidebar', `${base}/components/sidebar-admin.html`);
     } else if (path.includes('/member/')) {
-      loadComponent('sidebar', '/components/sidebar-member.html');
+      loadComponent('sidebar', `${base}/components/sidebar-member.html`);
     }
   }
 
-  // Check authentication
-  checkAuth();
+  // Check authentication (kalau fungsi ada)
+  if (typeof checkAuth === 'function') {
+    checkAuth();
+  }
 });
