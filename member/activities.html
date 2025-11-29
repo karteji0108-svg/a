@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kegiatan - Portal Anggota KARTEJI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <link rel="stylesheet" href="/assets/css/responsive.css">
+</head>
+<body>
+  <div id="sidebar"></div>
+
+  <div class="main-content">
+    <h1 class="text-3xl font-bold mb-6">Kegiatan</h1>
+
+    <div id="activities-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+
+    <div id="loading" class="text-center py-8">
+      <div class="spinner mx-auto"></div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+  <script src="/assets/js/firebase-config.js"></script>
+  <script src="/assets/js/auth.js"></script>
+  <script src="/assets/js/main.js"></script>
+  <script src="/assets/js/activities.js"></script>
+
+  <script>
+    checkAuth('anggota');
+
+    async function loadActivities() {
+      document.getElementById('loading').style.display = 'block';
+      const result = await getActivities();
+      document.getElementById('loading').style.display = 'none';
+
+      if (result.success) {
+        renderActivities(result.data, 'activities-container');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadActivities);
+  </script>
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manajemen Galeri - Dashboard KARTEJI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <link rel="stylesheet" href="/assets/css/responsive.css">
+</head>
+<body>
+  <div id="sidebar"></div>
+
+  <div class="main-content">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold">Manajemen Galeri</h1>
+      <button onclick="showAddAlbumModal()" class="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition">
+        <i class="fas fa-plus mr-2"></i>Buat Album
+      </button>
+    </div>
+
+    <div id="albums-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+  </div>
+
+  <div id="album-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">Buat Album</h2>
+        <button onclick="hideModal('album-modal')" class="text-gray-500 hover:text-gray-700">
+          <i class="fas fa-times text-2xl"></i>
+        </button>
+      </div>
+
+      <form id="album-form" class="space-y-4">
+        <input type="hidden" id="album-id">
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Judul Album</label>
+          <input type="text" id="album-title" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Deskripsi</label>
+          <textarea id="album-description" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Cover Album</label>
+          <input type="file" id="album-cover" accept="image/*" class="w-full px-4 py-3 border border-gray-300 rounded-lg">
+        </div>
+
+        <div class="flex gap-4">
+          <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+            Simpan
+          </button>
+          <button type="button" onclick="hideModal('album-modal')" class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-400 transition">
+            Batal
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+  <script src="/assets/js/firebase-config.js"></script>
+  <script src="/assets/js/auth.js"></script>
+  <script src="/assets/js/main.js"></script>
+  <script src="/assets/js/gallery.js"></script>
+
+  <script>
+    checkAuth('koordinator_sie');
+
+    async function loadAlbums() {
+      const result = await getAlbums();
+      if (result.success) {
+        const container = document.getElementById('albums-container');
+        container.innerHTML = result.data.map(album => `
+          <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            ${album.coverImage ? `
+              <img src="${album.coverImage}" alt="${album.title}" class="w-full h-48 object-cover">
+            ` : `
+              <div class="w-full h-48 bg-gray-200 flex items-center justify-center">
+                <i class="fas fa-images text-6xl text-gray-400"></i>
+              </div>
+            `}
+            <div class="p-4">
+              <h3 class="text-lg font-bold mb-2">${album.title}</h3>
+              <p class="text-gray-600 text-sm mb-3">${album.description || ''}</p>
+              <div class="flex items-center justify-between text-sm text-gray-500 mb-4">
+                <span><i class="fas fa-image mr-1"></i> ${album.photoCount || 0} foto</span>
+                <span>${formatDate(album.createdAt)}</span>
+              </div>
+              <div class="flex gap-2">
+                <button onclick="viewAlbum('${album.id}')" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                  <i class="fas fa-eye mr-1"></i> Lihat
+                </button>
+                <button onclick="deleteAlbumConfirm('${album.id}')" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    function showAddAlbumModal() {
+      document.getElementById('album-form').reset();
+      document.getElementById('album-id').value = '';
+      showModal('album-modal');
+    }
+
+    function viewAlbum(albumId) {
+      alert('Fitur upload foto ke album akan ditambahkan');
+    }
+
+    function deleteAlbumConfirm(id) {
+      if (confirm('Apakah Anda yakin ingin menghapus album ini? Semua foto dalam album akan terhapus.')) {
+        deleteAlbum(id).then(result => {
+          if (result.success) {
+            showToast('Album berhasil dihapus', 'success');
+            loadAlbums();
+          } else {
+            showToast('Gagal menghapus album', 'error');
+          }
+        });
+      }
+    }
+
+    document.getElementById('album-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const id = document.getElementById('album-id').value;
+      const title = document.getElementById('album-title').value;
+      const description = document.getElementById('album-description').value;
+      const coverFile = document.getElementById('album-cover').files[0];
+
+      let coverImage = null;
+      if (coverFile) {
+        const uploadResult = await uploadImage(coverFile, 'albums');
+        if (uploadResult.success) {
+          coverImage = uploadResult.url;
+        }
+      }
+
+      const albumData = { title, description };
+      if (coverImage) albumData.coverImage = coverImage;
+
+      let result;
+      if (id) {
+        result = await updateAlbum(id, albumData);
+      } else {
+        result = await createAlbum(albumData);
+      }
+
+      if (result.success) {
+        showToast('Album berhasil disimpan', 'success');
+        hideModal('album-modal');
+        loadAlbums();
+      } else {
+        showToast('Gagal menyimpan album', 'error');
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', loadAlbums);
+  </script>
+</body>
+</html>

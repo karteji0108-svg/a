@@ -1,0 +1,60 @@
+<div class="sidebar">
+  <div class="p-6 border-b">
+    <h2 class="text-2xl font-bold text-blue-600">KARTEJI</h2>
+    <p class="text-sm text-gray-600">Portal Anggota</p>
+  </div>
+
+  <div class="sidebar-menu">
+    <a href="/member/activities.html" class="sidebar-item">
+      <i class="fas fa-calendar-alt"></i>
+      <span>Kegiatan</span>
+    </a>
+
+    <a href="/member/announcements.html" class="sidebar-item">
+      <i class="fas fa-bullhorn"></i>
+      <span>Pengumuman</span>
+    </a>
+
+    <a href="/member/finances.html" class="sidebar-item">
+      <i class="fas fa-wallet"></i>
+      <span>Transparansi Kas</span>
+    </a>
+
+    <a href="/member/gallery.html" class="sidebar-item">
+      <i class="fas fa-images"></i>
+      <span>Galeri</span>
+    </a>
+
+    <a href="/member/profile.html" class="sidebar-item">
+      <i class="fas fa-user"></i>
+      <span>Profil</span>
+    </a>
+
+    <div class="border-t my-4"></div>
+
+    <a href="/index.html" class="sidebar-item">
+      <i class="fas fa-globe"></i>
+      <span>Lihat Website</span>
+    </a>
+
+    <button onclick="logout()" class="sidebar-item w-full text-left">
+      <i class="fas fa-sign-out-alt"></i>
+      <span>Logout</span>
+    </button>
+  </div>
+</div>
+
+<div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<button class="mobile-menu-btn" onclick="toggleSidebar()">
+  <i class="fas fa-bars"></i>
+</button>
+
+<script>
+function toggleSidebar() {
+  const sidebar = document.querySelector('.sidebar');
+  const overlay = document.querySelector('.sidebar-overlay');
+  sidebar.classList.toggle('active');
+  overlay.classList.toggle('active');
+}
+</script>

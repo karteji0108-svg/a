@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profil - Portal Anggota KARTEJI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <link rel="stylesheet" href="/assets/css/responsive.css">
+</head>
+<body>
+  <div id="sidebar"></div>
+
+  <div class="main-content">
+    <h1 class="text-3xl font-bold mb-6">Profil Saya</h1>
+
+    <div class="max-w-2xl">
+      <div class="bg-white rounded-xl shadow-lg p-8 mb-6">
+        <div class="flex items-center mb-6">
+          <div class="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mr-6">
+            <i class="fas fa-user text-4xl text-blue-600"></i>
+          </div>
+          <div>
+            <h2 id="profile-name" class="text-2xl font-bold mb-1">Loading...</h2>
+            <p id="profile-role" class="text-gray-600"></p>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <p id="profile-email" class="text-gray-900"></p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">No. Telepon</label>
+            <p id="profile-phone" class="text-gray-900"></p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <p id="profile-status" class="text-gray-900"></p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Bergabung Sejak</label>
+            <p id="profile-joined" class="text-gray-900"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-lg p-8">
+        <h3 class="text-xl font-bold mb-4">Edit Profil</h3>
+
+        <form id="profile-form" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap</label>
+            <input type="text" id="edit-name" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">No. Telepon</label>
+            <input type="tel" id="edit-phone" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+          </div>
+
+          <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+            Simpan Perubahan
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="/assets/js/firebase-config.js"></script>
+  <script src="/assets/js/auth.js"></script>
+  <script src="/assets/js/main.js"></script>
+  <script src="/assets/js/members.js"></script>
+
+  <script>
+    checkAuth('anggota');
+
+    async function loadProfile() {
+      const user = await getCurrentUser();
+
+      if (user) {
+        document.getElementById('profile-name').textContent = user.name;
+        document.getElementById('profile-role').textContent = getRoleText(user.role);
+        document.getElementById('profile-email').textContent = user.email;
+        document.getElementById('profile-phone').textContent = user.phone || '-';
+        document.getElementById('profile-status').textContent = user.status === 'active' ? 'Aktif' : 'Tidak Aktif';
+        document.getElementById('profile-joined').textContent = formatDate(user.createdAt);
+
+        document.getElementById('edit-name').value = user.name;
+        document.getElementById('edit-phone').value = user.phone || '';
+      }
+    }
+
+    document.getElementById('profile-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const user = await getCurrentUser();
+      const name = document.getElementById('edit-name').value;
+      const phone = document.getElementById('edit-phone').value;
+
+      const result = await updateMemberProfile(user.uid, { name, phone });
+
+      if (result.success) {
+        showToast('Profil berhasil diperbarui', 'success');
+        loadProfile();
+      } else {
+        showToast('Gagal memperbarui profil', 'error');
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', loadProfile);
+  </script>
+</body>
+</html>

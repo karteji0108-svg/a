@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transparansi Kas - Portal Anggota KARTEJI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <link rel="stylesheet" href="/assets/css/responsive.css">
+</head>
+<body>
+  <div id="sidebar"></div>
+
+  <div class="main-content">
+    <h1 class="text-3xl font-bold mb-6">Transparansi Kas</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div class="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-xl shadow-lg">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-lg font-semibold">Total Pemasukan</h3>
+          <i class="fas fa-arrow-down text-2xl"></i>
+        </div>
+        <p id="total-income" class="text-3xl font-bold">Rp 0</p>
+      </div>
+
+      <div class="bg-gradient-to-br from-red-500 to-red-600 text-white p-6 rounded-xl shadow-lg">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-lg font-semibold">Total Pengeluaran</h3>
+          <i class="fas fa-arrow-up text-2xl"></i>
+        </div>
+        <p id="total-expense" class="text-3xl font-bold">Rp 0</p>
+      </div>
+
+      <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-xl shadow-lg">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-lg font-semibold">Saldo</h3>
+          <i class="fas fa-wallet text-2xl"></i>
+        </div>
+        <p id="balance" class="text-3xl font-bold">Rp 0</p>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+      <div class="p-6 border-b">
+        <h2 class="text-xl font-bold">Riwayat Transaksi</h2>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="bg-gray-50">
+              <th class="py-3 px-4 text-left">Tanggal</th>
+              <th class="py-3 px-4 text-left">Jenis</th>
+              <th class="py-3 px-4 text-left">Keterangan</th>
+              <th class="py-3 px-4 text-left">Jumlah</th>
+              <th class="py-3 px-4 text-left">Kategori</th>
+            </tr>
+          </thead>
+          <tbody id="finances-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="loading" class="text-center py-8">
+      <div class="spinner mx-auto"></div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="/assets/js/firebase-config.js"></script>
+  <script src="/assets/js/auth.js"></script>
+  <script src="/assets/js/main.js"></script>
+  <script src="/assets/js/finances.js"></script>
+
+  <script>
+    checkAuth('anggota');
+
+    async function loadFinances() {
+      document.getElementById('loading').style.display = 'block';
+
+      const summaryResult = await getFinancialSummary();
+      const recordsResult = await getFinancialRecords();
+
+      document.getElementById('loading').style.display = 'none';
+
+      if (summaryResult.success) {
+        const { totalIncome, totalExpense, balance } = summaryResult.data;
+        document.getElementById('total-income').textContent = formatCurrency(totalIncome);
+        document.getElementById('total-expense').textContent = formatCurrency(totalExpense);
+        document.getElementById('balance').textContent = formatCurrency(balance);
+      }
+
+      if (recordsResult.success) {
+        renderFinancialRecords(recordsResult.data, 'finances-tbody');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadFinances);
+  </script>
+</body>
+</html>

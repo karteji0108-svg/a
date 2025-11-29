@@ -1,0 +1,55 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if file is an image
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+
+    // Helper function to check file size (max 5MB)
+    function isValidSize() {
+      return request.resource.size < 5 * 1024 * 1024;
+    }
+
+    // Activities images
+    match /activities/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAuthenticated() && isImage() && isValidSize();
+      allow delete: if isAuthenticated();
+    }
+
+    // Announcements images
+    match /announcements/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAuthenticated() && isImage() && isValidSize();
+      allow delete: if isAuthenticated();
+    }
+
+    // Gallery images
+    match /gallery/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAuthenticated() && isImage() && isValidSize();
+      allow delete: if isAuthenticated();
+    }
+
+    // Albums cover images
+    match /albums/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAuthenticated() && isImage() && isValidSize();
+      allow delete: if isAuthenticated();
+    }
+
+    // Profile pictures
+    match /profiles/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAuthenticated() && isImage() && isValidSize();
+      allow delete: if isAuthenticated();
+    }
+  }
+}

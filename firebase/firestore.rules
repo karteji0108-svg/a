@@ -1,0 +1,148 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to get user role
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    // Helper function to check if user is Super Admin
+    function isSuperAdmin() {
+      return isAuthenticated() && getUserRole() == 'super_admin';
+    }
+
+    // Helper function to check if user is Ketua
+    function isKetua() {
+      return isAuthenticated() && getUserRole() == 'ketua';
+    }
+
+    // Helper function to check if user is Wakil Ketua
+    function isWakilKetua() {
+      return isAuthenticated() && getUserRole() == 'wakil_ketua';
+    }
+
+    // Helper function to check if user is Bendahara
+    function isBendahara() {
+      return isAuthenticated() && getUserRole() == 'bendahara';
+    }
+
+    // Helper function to check if user is Sekretaris
+    function isSekretaris() {
+      return isAuthenticated() && getUserRole() == 'sekretaris';
+    }
+
+    // Helper function to check if user is Koordinator Sie
+    function isKoordinatorSie() {
+      return isAuthenticated() && getUserRole() == 'koordinator_sie';
+    }
+
+    // Helper function to check if user has admin privileges
+    function isAdmin() {
+      return isSuperAdmin() || isKetua() || isWakilKetua();
+    }
+
+    // Helper function to check if user has pengurus privileges
+    function isPengurus() {
+      return isAdmin() || isSekretaris() || isBendahara() || isKoordinatorSie();
+    }
+
+    // Users collection
+    match /users/{userId} {
+      // Anyone authenticated can read user data
+      allow read: if isAuthenticated();
+
+      // Users can update their own profile (except role)
+      allow update: if isAuthenticated() && request.auth.uid == userId &&
+                       (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']));
+
+      // Only admins can update user roles
+      allow update: if isAdmin() &&
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role', 'updatedAt']);
+
+      // Only super admin can delete users
+      allow delete: if isSuperAdmin();
+
+      // Allow create during registration
+      allow create: if true;
+    }
+
+    // Activities collection
+    match /activities/{activityId} {
+      // Everyone can read approved activities
+      allow read: if true;
+
+      // Pengurus can create activities
+      allow create: if isPengurus();
+
+      // Creator can update their own draft activities
+      allow update: if isAuthenticated() &&
+                       resource.data.createdBy == request.auth.uid &&
+                       resource.data.status == 'draft';
+
+      // Wakil can review activities
+      allow update: if isWakilKetua() &&
+                       request.resource.data.status == 'reviewed';
+
+      // Ketua and Super Admin can approve activities
+      allow update: if (isKetua() || isSuperAdmin()) &&
+                       request.resource.data.status == 'approved';
+
+      // Admin can delete activities
+      allow delete: if isAdmin();
+    }
+
+    // Financial records collection
+    match /financial_records/{recordId} {
+      // Authenticated users can read (for transparency)
+      allow read: if isAuthenticated();
+
+      // Only Bendahara and Super Admin can create, update, delete
+      allow create, update, delete: if isBendahara() || isSuperAdmin();
+    }
+
+    // Announcements collection
+    match /announcements/{announcementId} {
+      // Everyone can read announcements
+      allow read: if true;
+
+      // Pengurus can create announcements
+      allow create: if isPengurus();
+
+      // Creator or admin can update/delete
+      allow update, delete: if isAuthenticated() &&
+                               (resource.data.createdBy == request.auth.uid || isAdmin());
+    }
+
+    // Albums collection
+    match /albums/{albumId} {
+      // Everyone can read albums
+      allow read: if true;
+
+      // Pengurus can create albums
+      allow create: if isPengurus();
+
+      // Creator or admin can update/delete
+      allow update, delete: if isAuthenticated() &&
+                               (resource.data.createdBy == request.auth.uid || isAdmin());
+    }
+
+    // Galleries collection
+    match /galleries/{galleryId} {
+      // Everyone can read gallery photos
+      allow read: if true;
+
+      // Pengurus can upload photos
+      allow create: if isPengurus();
+
+      // Uploader or admin can delete
+      allow delete: if isAuthenticated() &&
+                      (resource.data.uploadedBy == request.auth.uid || isAdmin());
+    }
+  }
+}

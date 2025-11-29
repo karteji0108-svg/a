@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - KARTEJI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <link rel="stylesheet" href="/assets/css/responsive.css">
+</head>
+<body>
+  <div id="sidebar"></div>
+
+  <div class="main-content">
+    <h1 class="text-3xl font-bold mb-8">Dashboard</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-xl shadow-lg">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-lg font-semibold">Total Anggota</h3>
+          <i class="fas fa-users text-2xl"></i>
+        </div>
+        <p id="total-members" class="text-4xl font-bold">0</p>
+      </div>
+
+      <div class="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-xl shadow-lg">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-lg font-semibold">Total Kegiatan</h3>
+          <i class="fas fa-calendar-alt text-2xl"></i>
+        </div>
+        <p id="total-activities" class="text-4xl font-bold">0</p>
+      </div>
+
+      <div class="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white p-6 rounded-xl shadow-lg">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-lg font-semibold">Pengumuman</h3>
+          <i class="fas fa-bullhorn text-2xl"></i>
+        </div>
+        <p id="total-announcements" class="text-4xl font-bold">0</p>
+      </div>
+
+      <div class="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-6 rounded-xl shadow-lg">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-lg font-semibold">Saldo Kas</h3>
+          <i class="fas fa-wallet text-2xl"></i>
+        </div>
+        <p id="balance" class="text-2xl font-bold">Rp 0</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="bg-white rounded-xl shadow-lg p-6">
+        <h2 class="text-xl font-bold mb-4">Kegiatan Terbaru</h2>
+        <div id="recent-activities" class="space-y-4"></div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-lg p-6">
+        <h2 class="text-xl font-bold mb-4">Pengumuman Terbaru</h2>
+        <div id="recent-announcements" class="space-y-4"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="/assets/js/firebase-config.js"></script>
+  <script src="/assets/js/auth.js"></script>
+  <script src="/assets/js/main.js"></script>
+  <script src="/assets/js/activities.js"></script>
+  <script src="/assets/js/announcements.js"></script>
+  <script src="/assets/js/members.js"></script>
+  <script src="/assets/js/finances.js"></script>
+
+  <script>
+    checkAuth('koordinator_sie');
+
+    async function loadDashboardStats() {
+      const membersResult = await getMembers();
+      if (membersResult.success) {
+        document.getElementById('total-members').textContent = membersResult.data.length;
+      }
+
+      const activitiesResult = await getActivities();
+      if (activitiesResult.success) {
+        document.getElementById('total-activities').textContent = activitiesResult.data.length;
+
+        const recent = activitiesResult.data.slice(0, 5);
+        document.getElementById('recent-activities').innerHTML = recent.map(activity => `
+          <div class="border-l-4 border-blue-500 pl-4 py-2">
+            <h3 class="font-semibold">${activity.title}</h3>
+            <p class="text-sm text-gray-600">${formatDate(activity.date)}</p>
+          </div>
+        `).join('');
+      }
+
+      const announcementsResult = await getAnnouncements();
+      if (announcementsResult.success) {
+        document.getElementById('total-announcements').textContent = announcementsResult.data.length;
+
+        const recent = announcementsResult.data.slice(0, 5);
+        document.getElementById('recent-announcements').innerHTML = recent.map(announcement => `
+          <div class="border-l-4 border-yellow-500 pl-4 py-2">
+            <h3 class="font-semibold">${announcement.title}</h3>
+            <p class="text-sm text-gray-600">${formatDate(announcement.createdAt)}</p>
+          </div>
+        `).join('');
+      }
+
+      const summaryResult = await getFinancialSummary();
+      if (summaryResult.success) {
+        document.getElementById('balance').textContent = formatCurrency(summaryResult.data.balance);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadDashboardStats);
+  </script>
+</body>
+</html>
