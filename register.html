@@ -5,13 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Daftar - KARTEJI</title>
 
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Icon -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-  <!-- Perbaikan: hapus slash di depan -->
+  <!-- CSS utama -->
   <link rel="stylesheet" href="assets/css/style.css">
-  <!-- (opsional, kalau ada) -->
-  <!-- <link rel="stylesheet" href="assets/css/responsive.css"> -->
 </head>
 <body class="bg-gray-50">
 
@@ -28,53 +29,73 @@
       <div class="bg-white rounded-xl shadow-lg p-8">
         <form id="register-form" class="space-y-6">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap</label>
+            <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+              Nama Lengkap
+            </label>
             <input
               type="text"
               id="name"
+              name="name"
               required
+              autocomplete="name"
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+              Email
+            </label>
             <input
               type="email"
               id="email"
+              name="email"
               required
+              autocomplete="email"
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">No. Telepon</label>
+            <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">
+              No. Telepon
+            </label>
             <input
               type="tel"
               id="phone"
+              name="phone"
               required
+              autocomplete="tel"
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+            <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+              Password
+            </label>
             <input
               type="password"
               id="password"
+              name="password"
               required
               minlength="6"
+              autocomplete="new-password"
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Konfirmasi Password</label>
+            <label for="confirm-password" class="block text-sm font-medium text-gray-700 mb-2">
+              Konfirmasi Password
+            </label>
             <input
               type="password"
               id="confirm-password"
+              name="confirm-password"
               required
               minlength="6"
+              autocomplete="new-password"
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
           </div>
@@ -90,13 +111,11 @@
         <div class="mt-6 text-center">
           <p class="text-gray-600">
             Sudah punya akun?
-            <!-- Perbaikan: /login.html -> login.html -->
             <a href="login.html" class="text-blue-600 hover:underline font-semibold">Masuk</a>
           </p>
         </div>
 
         <div class="mt-4 text-center">
-          <!-- Perbaikan: /index.html -> index.html -->
           <a href="index.html" class="text-gray-500 hover:text-gray-700">
             <i class="fas fa-arrow-left mr-2"></i>
             Kembali ke Beranda
@@ -109,13 +128,13 @@
   <!-- Footer (dimuat lewat main.js) -->
   <div id="footer"></div>
 
-  <!-- Firebase SDKs -->
+  <!-- Firebase SDKs (compat) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
-  <!-- Perbaikan: hapus slash di depan -->
+  <!-- Script project -->
   <script src="assets/js/firebase-config.js"></script>
   <script src="assets/js/auth.js"></script>
   <script src="assets/js/main.js"></script>
@@ -135,16 +154,20 @@
         return;
       }
 
-      const result = await register(email, password, name, phone);
+      try {
+        const result = await register(email, password, name, phone);
 
-      if (result.success) {
-        showToast('Pendaftaran berhasil! Silakan login.', 'success');
-        setTimeout(() => {
-          // Perbaikan: /login.html -> login.html
-          window.location.href = 'login.html';
-        }, 2000);
-      } else {
-        showToast(result.error || 'Terjadi kesalahan saat mendaftar', 'error');
+        if (result.success) {
+          showToast('Pendaftaran berhasil! Silakan login.', 'success');
+          setTimeout(() => {
+            window.location.href = 'login.html';
+          }, 2000);
+        } else {
+          showToast(result.error || 'Terjadi kesalahan saat mendaftar', 'error');
+        }
+      } catch (err) {
+        console.error('Register error:', err);
+        showToast('Terjadi kesalahan saat mendaftar', 'error');
       }
     });
   </script>
